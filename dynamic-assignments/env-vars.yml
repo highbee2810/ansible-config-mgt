@@ -1,0 +1,14 @@
+- name: Include environment-specific variables from the first available file
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - dev.yml
+        - stage.yml
+        - prod.yml
+        - uat.yml
+      paths:
+        - "{{ playbook_dir }}/../env-vars"
+  tags:
+    - always
+
+
