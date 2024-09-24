@@ -1,0 +1,12 @@
+[jenkins]
+jenkins ansible_host=<Jenkins-Private-IP-Address> ansible_ssh_user=your_user
+
+[nginx]
+nginx ansible_host=<Nginx-Private-IP-Address> ansible_ssh_user=your_user
+
+[sonarqube]
+sonarqube ansible_host=<SonarQube-Private-IP-Address> ansible_ssh_user=your_user
+
+[artifact_repository]
+artifact_repo ansible_host=<Artifact_repository-Private-IP-Address> ansible_ssh_user=your_user
+
