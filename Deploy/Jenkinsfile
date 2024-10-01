@@ -38,6 +38,13 @@ stage('clean up'){
         }
       }
     }
+stage('maintenance'){
+      steps {
+        script {
+          sh 'echo maintenance stage'
+        }
+      }
+    }
 
     }
 }
