@@ -1,13 +1,15 @@
 [tooling]
 web1 ansible_host=172.31.26.245 ansible_ssh_user=ec2-user
 web2 ansible_host=172.31.20.55 ansible_ssh_user=ec2-user
+
 [nginx]
 nginx ansible_host=172.31.23.200 ansible_ssh_user=ubuntu
+
+[db]
+database ansible_host=172.31.26.240 ansible_ssh_user=ubuntu
 
 #[todo]
 #<Todo-Web-Server-Private-IP-Address>
 #[db:vars]
 #ansible_user=ec2-user
 #ansible_python_interpreter=/usr/bin/python
-#[db]
-#<DB-Server-Private-IP-Address>
