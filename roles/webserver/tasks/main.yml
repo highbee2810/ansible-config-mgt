@@ -1,0 +1,241 @@
+---
+# tasks file for webserver
+# # tasks file for webserver - php-todo
+---
+# Install Apache
+- name: Install Apache
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.yum:
+    name: httpd
+    state: present
+
+# Install EPEL release
+- name: Install EPEL release
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.yum:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+    state: present
+
+# Install dnf-utils and Remi repository
+- name: Install dnf-utils and Remi repository
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.yum:
+    name:
+      - dnf-utils
+      - http://rpms.remirepo.net/enterprise/remi-release-9.rpm
+    state: present
+
+# Reset PHP module
+- name: Reset PHP module
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: dnf module reset php -y
+
+# Enable PHP 7.4 module
+- name: Enable PHP 7.4 module
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: dnf module enable php:remi-7.4 -y
+
+# Install PHP and extensions
+- name: Install PHP and extensions
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.yum:
+    name:
+      - php
+      - php-opcache
+      - php-gd
+      - php-curl
+      - php-mysqlnd
+      - php-common
+      - php-mbstring
+      - php-intl
+      - php-xml
+      - php-fpm
+      - php-json
+    state: present
+    enablerepo: remi-7.4
+
+# Ensure PHP-FPM service is started and enabled
+- name: Ensure PHP-FPM service is started and enabled
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.service:
+    name: php-fpm
+    state: started
+    enabled: true
+
+# Set SELinux boolean for httpd_execmem
+- name: Set SELinux boolean for httpd_execmem
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.seboolean:
+    name: httpd_execmem
+    state: true
+    persistent: yes
+
+# Ensure httpd service is started and enabled
+- name: Ensure httpd service is started and enabled
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.service:
+    name: httpd
+    state: started
+    enabled: true
+
+# Download the artifact
+- name: Download the artifact
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.get_url:
+    url: http://54.88.110.0:8082/artifactory/Todo-artifact-local/php-todo.zip
+    dest: /home/ec2-user/php-todo.zip
+    url_username: admin
+    url_password: Admin123$
+
+- name: Ensure unzip is installed
+  become: yes
+  ansible.builtin.yum:
+    name: unzip
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Unzip the artifacts
+  ansible.builtin.unarchive:
+    src: /home/ec2-user/php-todo.zip
+    dest: /var/www/html/
+    remote_src: yes
+
+# Unzip the artifacts
+- name: Unzip the artifacts
+  ansible.builtin.unarchive:
+    src: /home/ec2-user/php-todo.zip
+    dest: /home/ec2-user/
+    remote_src: yes
+  become: true
+
+# Run chown on /var/www/html
+- name: Run chown on /var/www/html
+  ansible.builtin.command:
+    cmd: chown -R $USER:$USER /var/www/html
+  become: true
+
+# Deploy the code
+- name: Deploy the code
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.copy:
+    src: /home/ec2-user/var/lib/jenkins/workspace/php-todo-pipeline/.
+    dest: /var/www/html/
+    force: yes
+    remote_src: yes
+
+# Delete the zip file after unzipping
+- name: Delete the zip file after unzipping
+  ansible.builtin.file:
+    path: /home/ec2-user/php-todo.zip
+    state: absent
+  become: true
+
+# Delete the unzipped files after copying
+- name: Delete the unzipped files after copying
+  ansible.builtin.file:
+    path: /home/ec2-user/php-todo/
+    state: absent
+  become: true
+
+# Remove Apache default welcome page on RedHat-based systems
+- name: Remove Apache default welcome page
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.file:
+    path: /etc/httpd/conf.d/welcome.conf
+    state: absent
+  when: ansible_os_family == "RedHat"
+
+# Restart httpd
+- name: Restart httpd
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.service:
+    name: httpd
+    state: restarted
+
+# Verify PHP version
+- name: Verify PHP version
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command: php -v
+  register: php_version
+
+# Display PHP version
+- name: Display PHP version
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.debug:
+    msg: "{{ php_version.stdout }}"
+
+# Set SELinux context for web directory and PHP files
+- name: Set SELinux context for web directory
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: chcon -R -t httpd_sys_content_t /var/www/html
+
+- name: Set SELinux context for PHP writable files
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: chcon -R -t httpd_sys_rw_content_t /var/www/html
+
+# Generate a new APP_KEY if missing or invalid
+- name: Generate a new APP_KEY if missing or invalid
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: php artisan key:generate
+  args:
+    chdir: /var/www/html
+
+# Clear the configuration cache
+- name: Clear the configuration cache
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: php artisan config:cache
+  args:
+    chdir: /var/www/html
+
+# Ensure .env file and config directory have correct permissions
+- name: Ensure .env file and config directory have correct permissions - chown
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: chown -R apache:apache /var/www/html/
+
+- name: Ensure .env file and config directory have correct permissions - chmod
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.command:
+    cmd: chmod -R 775 /var/www/html/
+
+# Restart the web server and PHP-FPM
+- name: Restart the web server
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.service:
+    name: httpd
+    state: restarted
+
+- name: Restart PHP-FPM
+  remote_user: ec2-user
+  become: true
+  ansible.builtin.service:
+    name: php-fpm
+    state: restarted
