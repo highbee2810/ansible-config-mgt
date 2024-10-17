@@ -1,5 +1,12 @@
----
 # tasks file for webserver - php-todo
+
+# Install GPG key for EPEL
+- name: Install GPG key for EPEL
+  become: true
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9
+
 # Install Apache
 - name: Install Apache
   become: true
