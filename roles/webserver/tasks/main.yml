@@ -7,6 +7,13 @@
     state: present
     key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9
 
+# Install GPG key for Remi
+- name: Install GPG key for Remi
+  become: true
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://rpms.remirepo.net/RPM-GPG-KEY-remi
+
 # Install Apache
 - name: Install Apache
   become: true
@@ -29,40 +36,3 @@
       - dnf-utils
       - http://rpms.remirepo.net/enterprise/remi-release-9.rpm
     state: present
-
-# Reset PHP module and enable PHP 8.2
-- name: Reset and enable PHP 8.2 module
-  become: true
-  ansible.builtin.command:
-    cmd: >
-      dnf module reset php -y && dnf module enable php:remi-8.2 -y
-
-# Install PHP 8.2 and extensions
-- name: Install PHP 8.2 and extensions
-  become: true
-  ansible.builtin.yum:
-    name:
-      - php
-      - php-opcache
-      - php-gd
-      - php-curl
-      - php-mysqlnd
-      - php-common
-      - php-mbstring
-      - php-intl
-      - php-xml
-      - php-fpm
-      - php-json
-    state: present
-    enablerepo: remi-8.2
-
-# Ensure PHP-FPM and httpd services are started and enabled
-- name: Ensure PHP-FPM and httpd services are started and enabled
-  become: true
-  ansible.builtin.service:
-    name: "{{ item }}"
-    state: started
-    enabled: true
-  loop:
-    - php-fpm
-    - httpd
