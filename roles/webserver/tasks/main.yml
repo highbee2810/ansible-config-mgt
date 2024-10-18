@@ -30,15 +30,15 @@
       - http://rpms.remirepo.net/enterprise/remi-release-9.rpm
     state: present
 
-# Reset PHP module and enable PHP 7.4
-- name: Reset and enable PHP 7.4 module
+# Reset PHP module and enable PHP 8.2
+- name: Reset and enable PHP 8.2 module
   become: true
   ansible.builtin.command:
     cmd: >
-      dnf module reset php -y && dnf module enable php:remi-7.4 -y
+      dnf module reset php -y && dnf module enable php:remi-8.2 -y
 
-# Install PHP and extensions
-- name: Install PHP and extensions
+# Install PHP 8.2 and extensions
+- name: Install PHP 8.2 and extensions
   become: true
   ansible.builtin.yum:
     name:
@@ -54,7 +54,7 @@
       - php-fpm
       - php-json
     state: present
-    enablerepo: remi-7.4
+    enablerepo: remi-8.2
 
 # Ensure PHP-FPM and httpd services are started and enabled
 - name: Ensure PHP-FPM and httpd services are started and enabled
@@ -66,59 +66,3 @@
   loop:
     - php-fpm
     - httpd
-
-# Download the artifact
-- name: Download the artifact
-  become: true
-  ansible.builtin.get_url:
-    url: http://54.88.110.0:8082/artifactory/Todo-artifact-local/php-todo.zip
-    dest: /home/ec2-user/php-todo.zip
-    url_username: "{{ artifact_username }}"
-    url_password: "{{ artifact_password }}"
-
-# Ensure unzip is installed
-- name: Ensure unzip is installed
-  become: true
-  ansible.builtin.yum:
-    name: unzip
-    state: present
-
-# Unzip the artifacts to /var/www/html
-- name: Unzip the artifacts
-  become: true
-  ansible.builtin.unarchive:
-    src: /home/ec2-user/php-todo.zip
-    dest: /var/www/html/
-    remote_src: yes
-
-# Set SELinux context for web directory
-- name: Set SELinux context for web directory
-  become: true
-  ansible.builtin.command:
-    cmd: chcon -R -t httpd_sys_content_t /var/www/html
-
-- name: Set SELinux context for PHP writable files
-  become: true
-  ansible.builtin.command:
-    cmd: chcon -R -t httpd_sys_rw_content_t /var/www/html
-
-# Ensure correct permissions for .env and config
-- name: Ensure correct permissions for .env and config
-  become: true
-  ansible.builtin.command:
-    cmd: chown -R apache:apache /var/www/html/
-
-- name: Ensure correct permissions for .env and config (chmod)
-  become: true
-  ansible.builtin.command:
-    cmd: chmod -R 775 /var/www/html/
-
-# Restart web server and PHP-FPM
-- name: Restart web server and PHP-FPM
-  become: true
-  ansible.builtin.service:
-    name: "{{ item }}"
-    state: restarted
-  loop:
-    - httpd
-    - php-fpm
