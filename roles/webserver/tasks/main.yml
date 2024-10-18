@@ -1,37 +1,18 @@
-# tasks file for webserver - php-todo
+---
+# Playbook to install Apache on RHEL
 
-# Install GPG key for EPEL
-- name: Install GPG key for EPEL
+- hosts: all
   become: true
-  ansible.builtin.rpm_key:
-    state: present
-    key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9
+  tasks:
+    # Install Apache
+    - name: Install Apache (httpd)
+      ansible.builtin.yum:
+        name: httpd
+        state: present
 
-# Manually import Remi GPG key with rpm command
-- name: Import Remi GPG key manually
-  become: true
-  ansible.builtin.command:
-    cmd: rpm --import https://rpms.remirepo.net/RPM-GPG-KEY-remi
-
-# Install Apache
-- name: Install Apache
-  become: true
-  ansible.builtin.yum:
-    name: httpd
-    state: present
-
-# Install EPEL release
-- name: Install EPEL release
-  become: true
-  ansible.builtin.yum:
-    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-    state: present
-
-# Install dnf-utils and Remi repository
-- name: Install dnf-utils and Remi repository
-  become: true
-  ansible.builtin.yum:
-    name:
-      - dnf-utils
-      - http://rpms.remirepo.net/enterprise/remi-release-9.rpm
-    state: present
+    # Ensure Apache service is started and enabled
+    - name: Ensure Apache is started and enabled
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
