@@ -7,12 +7,11 @@
     state: present
     key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9
 
-# Install GPG key for Remi
-- name: Install GPG key for Remi
+# Manually import Remi GPG key with rpm command
+- name: Import Remi GPG key manually
   become: true
-  ansible.builtin.rpm_key:
-    state: present
-    key: https://rpms.remirepo.net/RPM-GPG-KEY-remi
+  ansible.builtin.command:
+    cmd: rpm --import https://rpms.remirepo.net/RPM-GPG-KEY-remi
 
 # Install Apache
 - name: Install Apache
