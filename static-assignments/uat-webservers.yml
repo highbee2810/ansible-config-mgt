@@ -1,0 +1,5 @@
+---
+- hosts: tooling
+  become: yes  # If necessary for privileged tasks
+  roles:
+    - webserver

@@ -1,0 +1,13 @@
+---
+# Install Apache
+- name: Install Apache (httpd)
+  ansible.builtin.yum:
+    name: httpd
+    state: present
+
+# Ensure Apache is started and enabled
+- name: Ensure Apache is started and enabled
+  ansible.builtin.service:
+    name: httpd
+    state: started
+    enabled: true
