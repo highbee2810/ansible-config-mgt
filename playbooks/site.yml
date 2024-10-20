@@ -7,17 +7,21 @@
       tags:
         - always
 
-    - name: tooling assignment
-      include_tasks: ../static-assignments/uat-webservers.yml
-      tags:
-        - webserver
+   # - name: tooling assignment
+  #    include_tasks: ../static-assignments/uat-webservers.yml
+ #     tags:
+#        - webserver
 
-    - name: Nginx assignment
-      include_tasks: ../static-assignments/loadbalancers.yml
-      tags:
-        - nginx_lb
+    #- name: Nginx assignment
+     # include_tasks: ../static-assignments/loadbalancers.yml
+    #  tags:
+     #   - nginx_lb
 
-    - name: DB assignment
-      include_tasks: ../static-assignments/db-servers.yml
+  #  - name: DB assignment
+   #   include_tasks: ../static-assignments/db-servers.yml
+   #   tags:
+   #     - db
+    - name: artifactory assignment
+      include_tasks: ../static-assignments/artifactory.yml
       tags:
-        - db
+        - artfifactory
