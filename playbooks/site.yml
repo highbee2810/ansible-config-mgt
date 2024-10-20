@@ -7,20 +7,17 @@
       tags:
         - always
 
-    # You can uncomment this line if needed
-    # - import_playbook: ../static-assignments/common.yml
-
     - name: tooling assignment
-      import_playbook: ../static-assignments/uat-webservers.yml
+      include_tasks: ../static-assignments/uat-webservers.yml
       tags:
         - webserver
 
     - name: Nginx assignment
-      import_playbook: ../static-assignments/loadbalancers.yml
+      include_tasks: ../static-assignments/loadbalancers.yml
       tags:
         - nginx_lb
 
     - name: DB assignment
-      import_playbook: ../static-assignments/db-servers.yml
+      include_tasks: ../static-assignments/db-servers.yml
       tags:
         - db
