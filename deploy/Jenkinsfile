@@ -1,13 +1,20 @@
+
 pipeline {
     agent any
 
     environment {
         ANSIBLE_CONFIG = "${WORKSPACE}/deploy/ansible.cfg"
     }
+
     parameters {
-      string(name: 'inventory', defaultValue: 'dev',  description: 'This is the inventory file for the environment to deploy configuration')
-      string(name: 'ansible_tags', defaultValue: 'webserver', description: 'Ansible tags to run specific roles or tasks')
+        string(name: 'inventory', defaultValue: 'dev', description: 'This is the inventory file for the environment to deploy configuration')
+        string(name: 'branch', defaultValue: 'main', description: 'Branch to checkout')
+        string(name: 'repo_url', defaultValue: 'https://github.com/highbee2810/ansible-config-mgt.git', description: 'Repository URL')
+        text(name: 'ssh_hosts', defaultValue: 'ubuntu@172.31.89.253\nubuntu@172.31.91.227\nec2-user@172.31.81.236\nec2-user@172.31.85.118', description: 'List of SSH hosts, one per line')
+        string(name: 'playbook_path', defaultValue: '${WORKSPACE}/playbooks/site.yml', description: 'Path to the Ansible playbook')
+        string(name: 'credentials_id', defaultValue: 'private-key', description: 'Credentials ID for SSH and Ansible')
     }
+
     stages {
         stage('Initial cleanup') {
             steps {
@@ -19,7 +26,7 @@ pipeline {
 
         stage('Checkout SCM') {
             steps {
-                git branch: 'main', url: 'https://github.com/highbee2810/ansible-config-mgt.git'
+                git branch: "${params.branch}", url: "${params.repo_url}"
             }
         }
 
@@ -33,14 +40,9 @@ pipeline {
         stage('Test SSH Connections') {
             steps {
                 script {
-                    def allHosts = [
-                        'ubuntu@172.31.26.240',
-                        'ubuntu@172.31.23.200',
-                        'ec2-user@172.31.20.55',
-                        'ec2-user@172.31.26.245'
-                    ]
+                    def allHosts = params.ssh_hosts.split('\n')
 
-                    sshagent(['private-key']) {
+                    sshagent([params.credentials_id]) {
                         allHosts.each { host ->
                             sh "ssh -o StrictHostKeyChecking=no ${host} exit"
                         }
@@ -51,14 +53,14 @@ pipeline {
 
         stage('Run Ansible playbook') {
             steps {
-                sshagent(['private-key']) {
+                sshagent([params.credentials_id]) {
                     ansiblePlaybook(
                         become: true,
-                        credentialsId: 'private-key',
+                        credentialsId: params.credentials_id,
                         disableHostKeyChecking: true,
                         installation: 'ansible',
-                        inventory: '${WORKSPACE}/${inventory}',
-                        playbook: '${WORKSPACE}/playbooks/site.yml'
+                        inventory: "${WORKSPACE}/inventory/${params.inventory}",
+                        playbook: params.playbook_path
                     )
                 }
             }
