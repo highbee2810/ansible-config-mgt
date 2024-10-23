@@ -1,5 +1,5 @@
 ---
-- hosts: artifactory
+- hosts: artifactory_setup
   roles:
      - artifactory
   become: true
