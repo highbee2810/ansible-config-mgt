@@ -1,5 +1,5 @@
 ---
-- hosts: artifactory
+- hosts: artifactory_setup
   become: true
   roles:
     - artifactory  # Ensure this role exists in your roles directory
